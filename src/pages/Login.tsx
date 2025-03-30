@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '../contexts/AuthContext';
-import { LogIn, AlertCircle, CheckCircle } from 'lucide-react';
+import { LogIn, AlertCircle, CheckCircle, QrCode } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('El correo electrónico no es válido'),
@@ -42,8 +42,17 @@ function Login() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <div className="flex flex-col items-center">
+          <div className="flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full">
+            <QrCode className="w-8 h-8 text-indigo-600" />
+          </div>
+          <h1 className="mt-4 text-4xl font-extrabold text-gray-900">
+            QR Declarg
+          </h1>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Sistema de Gestión de Declaraciones Juradas de Conformidad
+          </p>
+          <h2 className="mt-6 text-center text-2xl font-bold text-gray-900">
             Iniciar sesión
           </h2>
         </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Package, User, Settings as SettingsIcon, Menu } from 'lucide-react';
+import { LogOut, Package, User, Settings as SettingsIcon, Menu, X, QrCode } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface UserProfile {
@@ -28,7 +28,7 @@ function Layout() {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (e.clientX <= 50) {
+      if (e.clientX <= 50 && window.innerWidth > 768) {
         setIsHovering(true);
       }
     };
@@ -85,30 +85,33 @@ function Layout() {
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       {/* Top Navigation Bar */}
-      <nav className="bg-white dark:bg-gray-800 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+      <nav className="bg-white dark:bg-gray-800 shadow-md fixed w-full top-0 z-30">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+          <div className="flex justify-between h-14 sm:h-16">
             <div className="flex items-center">
               <button
                 onClick={toggleSidebar}
                 className="p-2 rounded-md text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300 focus:outline-none"
+                aria-label="Toggle sidebar"
               >
-                <Menu className="h-6 w-6" />
+                {isSidebarOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
               </button>
-              <div className="flex items-center ml-4">
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/1/1a/Flag_of_Argentina.svg"
-                  alt="Argentina Flag"
-                  className="h-6 w-8 object-cover rounded"
-                />
-                <h1 className="ml-3 text-xl font-bold text-gray-800 dark:text-white">
-                  Import QR ARG
+              <div className="flex items-center ml-2 sm:ml-4">
+                <div className="flex items-center justify-center w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-full">
+                  <QrCode className="w-5 h-5 text-indigo-600 dark:text-indigo-300" />
+                </div>
+                <h1 className="ml-2 sm:ml-3 text-lg sm:text-xl font-bold text-gray-800 dark:text-white truncate">
+                  QR Declarg
                 </h1>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               {userProfile && (
-                <div className="hidden sm:flex sm:items-center sm:space-x-2">
+                <div className="hidden lg:flex lg:items-center lg:space-x-2">
                   <span className="text-sm text-gray-700 dark:text-gray-300">
                     <span className="font-medium">{userProfile.brand_name}</span>
                     <span className="mx-2 text-gray-400">|</span>
@@ -118,10 +121,10 @@ function Layout() {
               )}
               <button
                 onClick={handleSignOut}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+                className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
               >
-                <LogOut className="w-4 h-4 mr-2" />
-                Cerrar Sesión
+                <LogOut className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Cerrar Sesión</span>
               </button>
             </div>
           </div>
@@ -131,26 +134,23 @@ function Layout() {
       {/* Sidebar */}
       <div
         ref={sidebarRef}
-        onMouseEnter={() => setIsHovering(true)}
+        onMouseEnter={() => window.innerWidth > 768 && setIsHovering(true)}
         onMouseLeave={() => {
-          if (!isSidebarOpen) {
+          if (!isSidebarOpen && window.innerWidth > 768) {
             setIsHovering(false);
           }
         }}
-        className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out z-50 ${
+        className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out z-40 w-64 sm:w-72 ${
           isSidebarOpen || isHovering ? 'translate-x-0' : '-translate-x-full'
         }`}
-        style={{ width: '250px' }}
       >
         {/* Sidebar Header */}
-        <div className="flex items-center px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-          <img
-            src="https://upload.wikimedia.org/wikipedia/commons/1/1a/Flag_of_Argentina.svg"
-            alt="Argentina Flag"
-            className="h-8 w-10 object-cover rounded"
-          />
+        <div className="flex items-center px-4 sm:px-6 pt-16 pb-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-center w-10 h-10 bg-indigo-100 dark:bg-indigo-900 rounded-full">
+            <QrCode className="w-6 h-6 text-indigo-600 dark:text-indigo-300" />
+          </div>
           <h2 className="ml-3 text-lg font-bold text-gray-800 dark:text-white">
-            Import QR ARG
+            QR Declarg
           </h2>
         </div>
 
@@ -158,33 +158,36 @@ function Layout() {
         <div className="flex flex-col pt-4">
           <Link
             to="/products"
-            className={`flex items-center px-6 py-3 text-sm font-medium transition-colors duration-200 ${
+            className={`flex items-center px-4 sm:px-6 py-3 text-base sm:text-sm font-medium transition-colors duration-200 ${
               location.pathname === '/products'
                 ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200'
                 : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'
             }`}
+            onClick={() => window.innerWidth < 768 && setIsSidebarOpen(false)}
           >
             <Package className="w-5 h-5 mr-3" />
             {t('navigation.products')}
           </Link>
           <Link
             to="/profile"
-            className={`flex items-center px-6 py-3 text-sm font-medium transition-colors duration-200 ${
+            className={`flex items-center px-4 sm:px-6 py-3 text-base sm:text-sm font-medium transition-colors duration-200 ${
               location.pathname === '/profile'
                 ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200'
                 : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'
             }`}
+            onClick={() => window.innerWidth < 768 && setIsSidebarOpen(false)}
           >
             <User className="w-5 h-5 mr-3" />
             {t('navigation.users')}
           </Link>
           <Link
             to="/settings"
-            className={`flex items-center px-6 py-3 text-sm font-medium transition-colors duration-200 ${
+            className={`flex items-center px-4 sm:px-6 py-3 text-base sm:text-sm font-medium transition-colors duration-200 ${
               location.pathname === '/settings'
                 ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200'
                 : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'
             }`}
+            onClick={() => window.innerWidth < 768 && setIsSidebarOpen(false)}
           >
             <SettingsIcon className="w-5 h-5 mr-3" />
             {t('navigation.settings')}
@@ -193,8 +196,10 @@ function Layout() {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <Outlet />
+      <main className="pt-14 sm:pt-16 pb-6 px-2 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto mt-6">
+          <Outlet />
+        </div>
       </main>
     </div>
   );
