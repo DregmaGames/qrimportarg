@@ -1,0 +1,32 @@
+{
+  "navigation": {
+    "products": "Products",
+    "users": "Users",
+    "settings": "Settings"
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": {
+      "title": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "language": {
+      "title": "Language",
+      "spanish": "Español",
+      "english": "English"
+    }
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  }
+}
