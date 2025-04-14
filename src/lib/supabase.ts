@@ -6,34 +6,42 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Validate environment variables
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+  console.error('Missing Supabase environment variables. Check your .env file and Netlify environment variables.');
 }
 
 // Create Supabase client with additional options
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    flowType: 'pkce',
-    storage: window.localStorage
-  },
-  global: {
-    headers: {
-      'x-application-name': 'qrdeclarg',
-      'x-application-version': '1.0.0'
-    }
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 10
+export const supabase = createClient(
+  supabaseUrl || '',
+  supabaseAnonKey || '',
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+      storage: window.localStorage
+    },
+    global: {
+      headers: {
+        'x-application-name': 'qrdeclarg',
+        'x-application-version': '1.0.0'
+      }
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 10
+      }
     }
   }
-});
+);
 
 // Test connection function with detailed error handling
 export async function testSupabaseConnection() {
   try {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Missing Supabase configuration');
+    }
+
     // First, check if we can connect to Supabase
     const { error: authError } = await supabase.auth.getSession();
     if (authError) throw authError;
@@ -46,7 +54,6 @@ export async function testSupabaseConnection() {
 
     if (dbError) throw dbError;
 
-    // Log successful connection
     console.log('Successfully connected to Supabase:', {
       url: supabaseUrl,
       hasData: Array.isArray(data)
@@ -54,7 +61,6 @@ export async function testSupabaseConnection() {
 
     return { success: true, data };
   } catch (error) {
-    // Detailed error logging
     console.error('Supabase connection error:', {
       error,
       url: supabaseUrl,
