@@ -6,7 +6,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Validate environment variables
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables. Check your .env file and Netlify environment variables.');
+  console.error('Missing Supabase environment variables');
 }
 
 // Create Supabase client with additional options
@@ -17,75 +17,23 @@ export const supabase = createClient(
     auth: {
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: true,
-      flowType: 'pkce',
-      storage: window.localStorage
-    },
-    global: {
-      headers: {
-        'x-application-name': 'qrdeclarg',
-        'x-application-version': '1.0.0'
-      }
-    },
-    realtime: {
-      params: {
-        eventsPerSecond: 10
-      }
+      detectSessionInUrl: true
     }
   }
 );
 
-// Test connection function with detailed error handling
+// Test connection function
 export async function testSupabaseConnection() {
   try {
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase configuration');
-    }
-
-    // First, check if we can connect to Supabase
-    const { error: authError } = await supabase.auth.getSession();
-    if (authError) throw authError;
-
-    // Then try to query the database
-    const { data, error: dbError } = await supabase
+    const { data, error } = await supabase
       .from('productos')
       .select('codigo_unico')
       .limit(1);
 
-    if (dbError) throw dbError;
-
-    console.log('Successfully connected to Supabase:', {
-      url: supabaseUrl,
-      hasData: Array.isArray(data)
-    });
-
+    if (error) throw error;
     return { success: true, data };
   } catch (error) {
-    console.error('Supabase connection error:', {
-      error,
-      url: supabaseUrl,
-      timestamp: new Date().toISOString()
-    });
-    return { 
-      success: false, 
-      error: error instanceof Error ? error : new Error('Unknown connection error') 
-    };
-  }
-}
-
-// Health check function
-export async function checkSupabaseHealth() {
-  try {
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Connection timeout')), 5000);
-    });
-
-    const connectionPromise = testSupabaseConnection();
-    const result = await Promise.race([connectionPromise, timeoutPromise]);
-
-    return result;
-  } catch (error) {
-    console.error('Health check failed:', error);
+    console.error('Supabase connection error:', error);
     return { success: false, error };
   }
 }

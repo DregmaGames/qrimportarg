@@ -9,11 +9,11 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorCount, setErrorCount] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // Show message if redirected from protected route
     const message = location.state?.message;
     if (message) {
       toast.error(message);
@@ -25,28 +25,37 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Check rate limiting
       if (!checkRateLimit(email)) {
-        toast.error('Demasiados intentos. Por favor, intente más tarde.');
-        return;
+        throw new Error('Demasiados intentos. Por favor, intente más tarde.');
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim(),
       });
 
       if (error) throw error;
+      if (!data.user) throw new Error('Error al obtener datos del usuario');
 
-      // Clear rate limit on successful login
       clearRateLimit(email);
-
-      // Redirect to the page they tried to visit or default to admin
+      
       const returnTo = location.state?.from || '/admin';
-      navigate(returnTo);
+      navigate(returnTo, { replace: true });
+      
+      toast.success('Inicio de sesión exitoso');
     } catch (error) {
-      console.error('Error:', error);
-      toast.error('Error al iniciar sesión');
+      console.error('Login error:', error);
+      setErrorCount(prev => prev + 1);
+      
+      const errorMessage = error instanceof Error 
+        ? error.message
+        : 'Error al iniciar sesión';
+      
+      toast.error(errorMessage);
+
+      if (errorCount >= 2) {
+        toast.error('Si el problema persiste, contacte al soporte técnico');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -118,28 +127,6 @@ export default function LoginPage() {
               </button>
             </div>
           </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
-                  ¿No tienes una cuenta?
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <button
-                onClick={() => navigate('/register')}
-                className="flex w-full justify-center rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-500 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                Crear cuenta
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>

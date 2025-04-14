@@ -1,48 +1,26 @@
 import { useEffect, useState } from 'react';
-import { testSupabaseConnection, checkSupabaseHealth } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
 export function SupabaseConnectionTest() {
   const [status, setStatus] = useState<'checking' | 'connected' | 'error'>('checking');
   const [error, setError] = useState<string | null>(null);
-  const [lastCheck, setLastCheck] = useState<Date>(new Date());
 
   useEffect(() => {
-    let mounted = true;
-
     async function checkConnection() {
       try {
-        // Initial connection test
-        const { success, error } = await testSupabaseConnection();
+        // Test the connection by making a simple query
+        const { data, error } = await supabase
+          .from('productos')
+          .select('codigo_unico')
+          .limit(1);
 
-        if (!mounted) return;
+        if (error) throw error;
 
-        if (!success) throw error;
-
+        // If we get here, the connection is working
         setStatus('connected');
-        setLastCheck(new Date());
         toast.success('Conexión con Supabase establecida');
-
-        // Start periodic health checks
-        const interval = setInterval(async () => {
-          const health = await checkSupabaseHealth();
-          
-          if (!mounted) return;
-
-          if (!health.success) {
-            setStatus('error');
-            setError('Error de conexión detectado');
-            toast.error('Se perdió la conexión con Supabase');
-          } else {
-            setStatus('connected');
-            setLastCheck(new Date());
-          }
-        }, 30000); // Check every 30 seconds
-
-        return () => clearInterval(interval);
       } catch (err) {
-        if (!mounted) return;
-
         console.error('Error connecting to Supabase:', err);
         setStatus('error');
         setError(err instanceof Error ? err.message : 'Error desconocido');
@@ -51,10 +29,6 @@ export function SupabaseConnectionTest() {
     }
 
     checkConnection();
-
-    return () => {
-      mounted = false;
-    };
   }, []);
 
   return (
@@ -78,11 +52,6 @@ export function SupabaseConnectionTest() {
         </span>
       </div>
       {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
-      {status === 'connected' && (
-        <p className="mt-1 text-xs text-gray-500">
-          Última verificación: {lastCheck.toLocaleTimeString()}
-        </p>
-      )}
     </div>
   );
 }

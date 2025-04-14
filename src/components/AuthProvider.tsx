@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AuthContext, checkTokenValidity, isSessionExpired } from '../lib/auth';
+import { AuthContext } from '../lib/auth';
 import { User } from '../types/users';
 import { supabase } from '../lib/supabase';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -11,30 +11,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [lastActivity, setLastActivity] = useState(Date.now());
   const navigate = useNavigate();
   const location = useLocation();
-
-  const checkSession = async () => {
-    try {
-      // Check token validity
-      const isValid = await checkTokenValidity();
-      if (!isValid) {
-        setUser(null);
-        return false;
-      }
-
-      // Check session timeout
-      if (isSessionExpired(lastActivity)) {
-        await supabase.auth.signOut();
-        setUser(null);
-        toast.error('Sesión expirada por inactividad');
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error checking session:', error);
-      return false;
-    }
-  };
 
   useEffect(() => {
     // Update last activity on user interaction
@@ -56,45 +32,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Check session periodically
-    const interval = setInterval(async () => {
-      const isValid = await checkSession();
-      if (!isValid && !location.pathname.startsWith('/login')) {
-        navigate('/login', { 
-          state: { 
-            from: location.pathname,
-            message: 'Por favor inicie sesión para continuar' 
-          }
-        });
-      }
-    }, 60000); // Check every minute
-
-    return () => clearInterval(interval);
-  }, [navigate, location, lastActivity]);
-
-  useEffect(() => {
     // Initial session check
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email || '',
-        });
+    const initSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (location.pathname === '/login') {
-          const returnTo = location.state?.from || '/admin';
-          navigate(returnTo);
-        }
-      } else if (!location.pathname.startsWith('/login')) {
-        navigate('/login', { 
-          state: { 
-            from: location.pathname,
-            message: 'Por favor inicie sesión para continuar' 
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+          });
+          
+          if (location.pathname === '/login') {
+            const returnTo = location.state?.from || '/admin';
+            navigate(returnTo, { replace: true });
           }
-        });
+        } else if (!location.pathname.startsWith('/login') && 
+                   !location.pathname.startsWith('/products/') && 
+                   !location.pathname.startsWith('/qr/')) {
+          navigate('/login', { 
+            state: { 
+              from: location.pathname,
+              message: 'Por favor inicie sesión para continuar' 
+            },
+            replace: true
+          });
+        }
+      } catch (error) {
+        console.error('Session initialization error:', error);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    });
+    };
+
+    initSession();
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -106,19 +77,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (location.pathname === '/login') {
           const returnTo = location.state?.from || '/admin';
-          navigate(returnTo);
+          navigate(returnTo, { replace: true });
         }
       } else {
         setUser(null);
         if (!location.pathname.startsWith('/products/') && 
             !location.pathname.startsWith('/qr/') && 
-            location.pathname !== '/login' && 
-            location.pathname !== '/register') {
+            location.pathname !== '/login') {
           navigate('/login', { 
             state: { 
               from: location.pathname,
               message: 'Por favor inicie sesión para continuar' 
-            }
+            },
+            replace: true
           });
         }
       }
@@ -129,6 +100,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe();
     };
   }, [navigate, location]);
+
+  const checkSession = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      return !!session;
+    } catch (error) {
+      console.error('Error checking session:', error);
+      return false;
+    }
+  };
 
   return (
     <AuthContext.Provider value={{ user, isLoading, lastActivity, checkSession }}>
