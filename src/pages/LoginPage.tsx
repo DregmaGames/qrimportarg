@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { checkRateLimit, clearRateLimit } from '../lib/auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -11,13 +12,25 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || '/';
+  useEffect(() => {
+    // Show message if redirected from protected route
+    const message = location.state?.message;
+    if (message) {
+      toast.error(message);
+    }
+  }, [location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
+      // Check rate limiting
+      if (!checkRateLimit(email)) {
+        toast.error('Demasiados intentos. Por favor, intente más tarde.');
+        return;
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -25,7 +38,12 @@ export default function LoginPage() {
 
       if (error) throw error;
 
-      navigate(from, { replace: true });
+      // Clear rate limit on successful login
+      clearRateLimit(email);
+
+      // Redirect to the page they tried to visit or default to admin
+      const returnTo = location.state?.from || '/admin';
+      navigate(returnTo);
     } catch (error) {
       console.error('Error:', error);
       toast.error('Error al iniciar sesión');
