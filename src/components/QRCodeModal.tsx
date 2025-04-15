@@ -30,7 +30,7 @@ export function QRCodeModal({ isOpen, onClose, productId, productName }: QRCodeM
   const generateQRCode = async () => {
     setIsGenerating(true);
     try {
-      const url = `${window.location.origin}/qr/${productId}`;
+      const url = `${window.location.origin}/products/${productId}`;
       setDestinationUrl(url);
 
       // Generate high-quality QR code
