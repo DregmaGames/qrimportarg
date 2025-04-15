@@ -23,7 +23,7 @@ function ProductPassport() {
           .from('productos')
           .select('*')
           .eq('codigo_unico', uuid)
-          .single();
+          .maybeSingle();
 
         if (fetchError) throw fetchError;
         if (!data) throw new Error('Producto no encontrado');
@@ -37,6 +37,7 @@ function ProductPassport() {
           metaDescription.setAttribute('content', `Información detallada sobre ${data.nombre_producto} fabricado por ${data.fabricante}`);
         }
       } catch (err) {
+        console.error('Error fetching product:', err);
         setError(err instanceof Error ? err.message : 'Error al cargar el producto');
       } finally {
         setLoading(false);
@@ -86,6 +87,9 @@ function ProductPassport() {
             </h1>
             <p className="text-lg text-gray-600">
               Pasaporte Digital de Producto
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              {product.resolution}
             </p>
           </div>
 

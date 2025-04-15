@@ -22,6 +22,7 @@ export function ProductModal({ isOpen, onClose, onSubmit, editProduct }: Product
     domicilio_fabricante: '',
     certificado_url: '',
     identificacion: '',
+    resolution: 'Res. SIYC N° 16/2025',
   });
   
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
@@ -39,6 +40,7 @@ export function ProductModal({ isOpen, onClose, onSubmit, editProduct }: Product
         domicilio_fabricante: editProduct.domicilio_fabricante,
         certificado_url: editProduct.certificado_url || '',
         identificacion: editProduct.identificacion,
+        resolution: editProduct.resolution || 'Res. SIYC N° 16/2025',
       });
     } else {
       setFormData({
@@ -51,6 +53,7 @@ export function ProductModal({ isOpen, onClose, onSubmit, editProduct }: Product
         domicilio_fabricante: '',
         certificado_url: '',
         identificacion: '',
+        resolution: 'Res. SIYC N° 16/2025',
       });
     }
     setCertificateFile(null);
@@ -211,6 +214,21 @@ export function ProductModal({ isOpen, onClose, onSubmit, editProduct }: Product
                       value={formData.identificacion}
                       onChange={(e) => setFormData({ ...formData, identificacion: e.target.value })}
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Resolución
+                    </label>
+                    <select
+                      required
+                      className="block w-full rounded-lg border-gray-300 bg-gray-50 px-4 py-2.5 text-gray-900 focus:border-blue-500 focus:ring-blue-500 focus:ring-2 shadow-sm transition duration-200"
+                      value={formData.resolution}
+                      onChange={(e) => setFormData({ ...formData, resolution: e.target.value })}
+                    >
+                      <option value="Res. SIYC N° 16/2025">Res. SIYC N° 16/2025</option>
+                      <option value="Res. SIYC N° 236/2024">Res. SIYC N° 236/2024</option>
+                    </select>
                   </div>
                   
                   <div>

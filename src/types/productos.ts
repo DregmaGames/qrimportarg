@@ -10,6 +10,7 @@ export interface Producto {
   materiales: string;
   capacidades_limitaciones: string;
   identificacion: string;
+  resolution: string;
   
   // Manufacturer Information
   fabricante: string;

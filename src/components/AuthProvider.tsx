@@ -13,7 +13,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const location = useLocation();
 
   useEffect(() => {
-    // Update last activity on user interaction
     const updateActivity = () => {
       setLastActivity(Date.now());
     };
@@ -32,7 +31,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Initial session check
     const initSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -50,16 +48,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else if (!location.pathname.startsWith('/login') && 
                    !location.pathname.startsWith('/products/') && 
                    !location.pathname.startsWith('/qr/')) {
-          navigate('/login', { 
-            state: { 
-              from: location.pathname,
-              message: 'Por favor inicie sesión para continuar' 
-            },
-            replace: true
-          });
+          navigate('/login', { replace: true });
         }
       } catch (error) {
         console.error('Session initialization error:', error);
+        toast.error('Error al inicializar la sesión');
       } finally {
         setIsLoading(false);
       }
@@ -67,8 +60,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initSession();
 
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        navigate('/login', { replace: true });
+        return;
+      }
+
       if (session?.user) {
         setUser({
           id: session.user.id,
@@ -84,13 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!location.pathname.startsWith('/products/') && 
             !location.pathname.startsWith('/qr/') && 
             location.pathname !== '/login') {
-          navigate('/login', { 
-            state: { 
-              from: location.pathname,
-              message: 'Por favor inicie sesión para continuar' 
-            },
-            replace: true
-          });
+          navigate('/login', { replace: true });
         }
       }
       setIsLoading(false);
