@@ -56,18 +56,58 @@ export function QRCodeModal({ isOpen, onClose, productId, productName }: QRCodeM
     }
   };
 
+  const getFontEmbedCSS = (): string => {
+    return `
+      @font-face {
+        font-family: 'Montserrat-Arabic';
+        src: url('${window.location.origin}/public/Font/Montserrat-Arabic.otf') format('opentype');
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      
+      .ar-text {
+        font-family: 'Montserrat-Arabic', Arial, sans-serif !important;
+        font-weight: 700 !important;
+        font-size: 20pt !important;
+        line-height: 1 !important;
+      }
+    `;
+  };
+
   const handleDownloadPNG = async () => {
     if (!labelRef.current) return;
 
     try {
-      // Skip remote font loading by setting options
-      const dataUrl = await toPng(labelRef.current, {
-        width: 94, // 25mm at 96dpi
-        height: 113, // 30mm at 96dpi
+      // Wait for fonts to be fully loaded
+      await document.fonts.ready;
+      
+      // Create a temporary clone to avoid modifying the DOM
+      const clone = labelRef.current.cloneNode(true) as HTMLElement;
+      document.body.appendChild(clone);
+      
+      // Apply styles directly to ensure they're captured
+      const spanElement = clone.querySelector('.ar-text');
+      if (spanElement) {
+        spanElement.setAttribute('style', 'font-family: Montserrat-Arabic, Arial, sans-serif !important; font-weight: 700 !important; font-size: 20pt !important; line-height: 1 !important;');
+      }
+      
+      // Generate image with embedded fonts
+      const dataUrl = await toPng(clone, {
+        width: 94,
+        height: 113,
         pixelRatio: 4,
-        skipFonts: true // Skip loading external fonts
+        quality: 1,
+        skipFonts: false,
+        fontEmbedCSS: getFontEmbedCSS(),
+        canvasWidth: 376, // 94 * 4
+        canvasHeight: 452 // 113 * 4
       });
       
+      // Remove the clone
+      document.body.removeChild(clone);
+      
+      // Save the image
       saveAs(dataUrl, `qr-${productName.toLowerCase().replace(/\s+/g, '-')}.png`);
       toast.success('Etiqueta PNG descargada exitosamente');
     } catch (error) {
@@ -80,26 +120,49 @@ export function QRCodeModal({ isOpen, onClose, productId, productName }: QRCodeM
     if (!labelRef.current) return;
 
     try {
-      // Skip remote font loading by setting options
-      const blob = await toBlob(labelRef.current, {
+      // Wait for fonts to be fully loaded
+      await document.fonts.ready;
+      
+      // Create a temporary clone to avoid modifying the DOM
+      const clone = labelRef.current.cloneNode(true) as HTMLElement;
+      document.body.appendChild(clone);
+      
+      // Apply styles directly to ensure they're captured
+      const spanElement = clone.querySelector('.ar-text');
+      if (spanElement) {
+        spanElement.setAttribute('style', 'font-family: Montserrat-Arabic, Arial, sans-serif !important; font-weight: 700 !important; font-size: 20pt !important; line-height: 1 !important;');
+      }
+      
+      // Generate blob with embedded fonts
+      const blob = await toBlob(clone, {
         width: 94,
-        height: 113,
+        height: 113, 
         pixelRatio: 4,
-        skipFonts: true // Skip loading external fonts
+        quality: 1,
+        skipFonts: false,
+        fontEmbedCSS: getFontEmbedCSS(),
+        canvasWidth: 376, // 94 * 4
+        canvasHeight: 452 // 113 * 4
       });
+      
+      // Remove the clone
+      document.body.removeChild(clone);
 
       if (!blob) throw new Error('Error generating image');
 
+      // Create PDF with the exact dimensions
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: [25, 30] // Exact dimensions in mm
       });
 
+      // Add the image to the PDF
       const imgData = URL.createObjectURL(blob);
-      pdf.addImage(imgData, 'PNG', 0, 0, 25, 30); // Place at exact dimensions
+      pdf.addImage(imgData, 'PNG', 0, 0, 25, 30);
       pdf.save(`qr-${productName.toLowerCase().replace(/\s+/g, '-')}.pdf`);
       
+      // Clean up
       URL.revokeObjectURL(imgData);
       toast.success('Etiqueta PDF descargada exitosamente');
     } catch (error) {
@@ -204,12 +267,14 @@ export function QRCodeModal({ isOpen, onClose, productId, productName }: QRCodeM
                         <div style={{ flex: 1 }} />
                         <div className="flex items-center" style={{ alignItems: 'baseline' }}>
                           <span
+                            className="ar-text"
                             style={{
-                              fontFamily: 'Montserrat-Arabic',
+                              fontFamily: 'Montserrat-Arabic, Arial, sans-serif',
                               fontSize: '20pt',
                               lineHeight: 1,
                               marginRight: '4px',
-                              color: '#000000'
+                              color: '#000000',
+                              fontWeight: 700
                             }}
                           >
                             AR

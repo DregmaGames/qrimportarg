@@ -6,7 +6,7 @@
 @layer base {
   @font-face {
     font-family: 'Montserrat-Arabic';
-    src: url('/src/Font/Montserrat-Arabic Regular 400.otf') format('opentype');
+    src: url('/public/Font/Montserrat-Arabic.otf') format('opentype');
     font-weight: 400;
     font-style: normal;
     font-display: swap;
