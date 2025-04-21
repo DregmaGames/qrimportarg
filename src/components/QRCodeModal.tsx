@@ -7,6 +7,7 @@ import { saveAs } from 'file-saver';
 import { toPng, toBlob } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import toast from 'react-hot-toast';
+import '../fonts.css';
 
 interface QRCodeModalProps {
   isOpen: boolean;
@@ -66,10 +67,12 @@ export function QRCodeModal({ isOpen, onClose, productId, productName }: QRCodeM
     if (!labelRef.current) return;
 
     try {
+      // Skip remote font loading by setting options
       const dataUrl = await toPng(labelRef.current, {
         width: 94, // 25mm at 96dpi
         height: 113, // 30mm at 96dpi
-        pixelRatio: 4
+        pixelRatio: 4,
+        skipFonts: true // Skip loading external fonts
       });
       
       saveAs(dataUrl, `qr-${productName.toLowerCase().replace(/\s+/g, '-')}.png`);
@@ -84,10 +87,12 @@ export function QRCodeModal({ isOpen, onClose, productId, productName }: QRCodeM
     if (!labelRef.current) return;
 
     try {
+      // Skip remote font loading by setting options
       const blob = await toBlob(labelRef.current, {
         width: 94,
         height: 113,
-        pixelRatio: 4
+        pixelRatio: 4,
+        skipFonts: true // Skip loading external fonts
       });
 
       if (!blob) throw new Error('Error generating image');

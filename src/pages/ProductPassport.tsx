@@ -31,7 +31,7 @@ function ProductPassport() {
         setProduct(data);
         
         // Update metadata
-        document.title = `${data.nombre_producto} - Pasaporte Digital de Producto`;
+        document.title = `${data.nombre_producto} - Información Digital de Producto`;
         const metaDescription = document.querySelector('meta[name="description"]');
         if (metaDescription) {
           metaDescription.setAttribute('content', `Información detallada sobre ${data.nombre_producto} fabricado por ${data.fabricante}`);
@@ -86,7 +86,7 @@ function ProductPassport() {
               {product.nombre_producto}
             </h1>
             <p className="text-lg text-gray-600">
-              Pasaporte Digital de Producto
+            Información Digital de Producto
             </p>
             <p className="text-sm text-gray-500 mt-2">
               {product.resolution}
