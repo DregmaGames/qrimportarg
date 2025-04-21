@@ -9,6 +9,9 @@ function QRLanding() {
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
+    // Log for debugging
+    console.log('QRLanding loaded with uuid:', uuid);
+    
     try {
       // Try to parse the QR code data if available
       const urlParams = new URLSearchParams(window.location.search);
@@ -25,6 +28,7 @@ function QRLanding() {
     // Auto-redirect after a short delay
     const timer = setTimeout(() => {
       setIsRedirecting(true);
+      console.log('Redirecting to product page:', `/products/${uuid}`);
       navigate(`/products/${uuid}`);
     }, 2000);
 
@@ -34,6 +38,7 @@ function QRLanding() {
   // Immediate redirect if direct access
   const handleManualRedirect = () => {
     setIsRedirecting(true);
+    console.log('Manual redirect to:', `/products/${uuid}`);
     navigate(`/products/${uuid}`);
   };
 

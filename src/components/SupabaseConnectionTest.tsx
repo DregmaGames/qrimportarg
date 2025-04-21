@@ -1,7 +1,11 @@
 import { useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export function SupabaseConnectionTest() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   useEffect(() => {
     async function checkConnection() {
       try {
@@ -14,13 +18,21 @@ export function SupabaseConnectionTest() {
         if (error) {
           console.error('Error connecting to Supabase:', error);
         }
+
+        // Log the current path for debugging routing
+        console.log('Current path:', location.pathname);
+        
+        // Check if we're at the root and not already navigating
+        if (location.pathname === '/' && !location.state?.navigating) {
+          navigate('/login', { state: { navigating: true } });
+        }
       } catch (err) {
         console.error('Error connecting to Supabase:', err);
       }
     }
 
     checkConnection();
-  }, []);
+  }, [location, navigate]);
 
   // Return null to render nothing
   return null;
