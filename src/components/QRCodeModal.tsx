@@ -31,29 +31,22 @@ export function QRCodeModal({ isOpen, onClose, productId, productName }: QRCodeM
   const generateQRCode = async () => {
     setIsGenerating(true);
     try {
-      const url = `${window.location.origin}/products/${productId}`;
+      // Use absolute URL with origin to ensure it works on any domain
+      const baseUrl = window.location.origin;
+      const url = `${baseUrl}/products/${productId}`;
       setDestinationUrl(url);
 
       // Generate high-quality QR code
-      const dataUrl = await QRCode.toDataURL(
-        `${url}?data=${encodeURIComponent(
-          JSON.stringify({
-            id: productId,
-            name: productName,
-            timestamp: new Date().toISOString()
-          })
-        )}`,
-        {
-          type: 'image/png',
-          width: 1000,
-          margin: 0,
-          errorCorrectionLevel: 'H',
-          color: {
-            dark: '#000000',
-            light: '#ffffff'
-          }
+      const dataUrl = await QRCode.toDataURL(url, {
+        type: 'image/png',
+        width: 1000,
+        margin: 0,
+        errorCorrectionLevel: 'H',
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
         }
-      );
+      });
       setQrDataUrl(dataUrl);
     } catch (error) {
       console.error('Error generating QR code:', error);

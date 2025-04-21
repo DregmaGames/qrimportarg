@@ -6,6 +6,7 @@ function QRLanding() {
   const { uuid } = useParams<{ uuid: string }>();
   const navigate = useNavigate();
   const [productData, setProductData] = useState<any>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
     try {
@@ -21,25 +22,39 @@ function QRLanding() {
       console.error('Error parsing QR data:', error);
     }
 
-    // Auto-redirect after 2 seconds
+    // Auto-redirect after a short delay
     const timer = setTimeout(() => {
+      setIsRedirecting(true);
       navigate(`/products/${uuid}`);
     }, 2000);
 
     return () => clearTimeout(timer);
   }, [uuid, navigate]);
 
+  // Immediate redirect if direct access
+  const handleManualRedirect = () => {
+    setIsRedirecting(true);
+    navigate(`/products/${uuid}`);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
       <div className="text-center">
         <button
-          onClick={() => navigate(`/products/${uuid}`)}
+          onClick={handleManualRedirect}
+          disabled={isRedirecting}
           className="inline-flex flex-col items-center justify-center p-8 rounded-full bg-white shadow-lg hover:shadow-xl transition-all duration-300 group"
         >
-          <Globe className="h-16 w-16 text-blue-600 group-hover:text-blue-700 transition-colors duration-300" />
-          <span className="mt-4 text-sm text-gray-600">
-            {productData?.name || 'Click para ver información del producto'}
-          </span>
+          {isRedirecting ? (
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          ) : (
+            <>
+              <Globe className="h-16 w-16 text-blue-600 group-hover:text-blue-700 transition-colors duration-300" />
+              <span className="mt-4 text-sm text-gray-600">
+                {productData?.name || 'Click para ver información del producto'}
+              </span>
+            </>
+          )}
         </button>
       </div>
     </div>

@@ -3,8 +3,9 @@ import { supabase } from './supabase';
 
 export async function generateQRCode(productId: string): Promise<string> {
   try {
-    // Generate QR code for the landing page URL
-    const qrDataUrl = await QRCode.toDataURL(`${window.location.origin}/qr/${productId}`, {
+    // Generate QR code with absolute URL to ensure it works on any domain
+    const baseUrl = window.location.origin;
+    const qrDataUrl = await QRCode.toDataURL(`${baseUrl}/products/${productId}`, {
       type: 'image/png',
       width: 1000,
       margin: 1,

@@ -15,8 +15,12 @@ function App() {
       <SupabaseConnectionTest />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        
+        {/* Product and QR routes - these should be accessible publicly */}
         <Route path="/products/:uuid" element={<ProductPassport />} />
         <Route path="/qr/:uuid" element={<QRLanding />} />
+        
+        {/* Admin section - protected route */}
         <Route
           path="/admin"
           element={
@@ -25,6 +29,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
+        {/* Default redirects */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
