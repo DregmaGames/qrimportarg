@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Plus, LogOut, Menu } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { ProductModal } from '../components/ProductModal';
 import { DJCUploadModal } from '../components/DJCUploadModal';
 import { QRCodeModal } from '../components/QRCodeModal';
@@ -9,12 +9,10 @@ import { ProductSearchResults } from '../components/ProductSearchResults';
 import { supabase } from '../lib/supabase';
 import { Producto } from '../types/productos';
 import { useAuth } from '../lib/auth';
-import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 function ProductsAdmin() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [products, setProducts] = useState<Producto[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Producto[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,20 +22,8 @@ function ProductsAdmin() {
   const [selectedProduct, setSelectedProduct] = useState<Producto | undefined>();
   const [editingProduct, setEditingProduct] = useState<Producto | undefined>();
   const [productToDelete, setProductToDelete] = useState<Producto | undefined>();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isFiltered, setIsFiltered] = useState(false);
-
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      navigate('/login');
-    } catch (error) {
-      console.error('Error signing out:', error);
-      toast.error('Error al cerrar sesión');
-    }
-  };
 
   const fetchProducts = async () => {
     try {
@@ -137,21 +123,35 @@ function ProductsAdmin() {
     if (!productToDelete) return;
     
     try {
+      console.log('Deleting product:', {
+        productId: productToDelete.codigo_unico,
+        userId: user?.id || null
+      });
+      
       // Use the delete_product RPC function to move to recycle bin
-      const { error } = await supabase.rpc('delete_product', {
-        product_id: productToDelete.codigo_unico,
-        deleted_by_id: user?.id
+      // Fixed the parameter order to match the expected function signature
+      const { data, error } = await supabase.rpc('delete_product', {
+        deleted_by_id: user?.id || null,
+        product_id: productToDelete.codigo_unico
       });
   
-      if (error) throw error;
+      if (error) {
+        console.error('Delete product RPC error:', error);
+        throw error;
+      }
       
-      toast.success(`Producto "${productToDelete.nombre_producto}" eliminado exitosamente`);
+      if (data === true) {
+        toast.success(`Producto "${productToDelete.nombre_producto}" eliminado exitosamente`);
+      } else {
+        toast.error('No se pudo eliminar el producto');
+      }
+      
       setIsDeleteModalOpen(false);
       setProductToDelete(undefined);
       fetchProducts();
     } catch (error) {
       console.error('Error deleting product:', error);
-      toast.error('Error al eliminar el producto');
+      toast.error('Error al eliminar el producto. Por favor intente nuevamente.');
     }
   };
 
@@ -186,88 +186,35 @@ function ProductsAdmin() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm sticky top-0 z-30">
-        <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex-shrink-0">
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">
-                Productos
-              </h1>
-            </div>
-
-            <div className="flex items-center gap-2 sm:gap-4">
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="sm:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-
-              <div className="hidden sm:flex items-center space-x-4">
-                <span className="text-sm text-gray-600 truncate max-w-[200px]">
-                  {user?.email}
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                >
-                  <LogOut className="h-4 w-4 mr-1.5" />
-                  <span>Cerrar Sesión</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {isMobileMenuOpen && (
-            <div className="sm:hidden border-t border-gray-200 py-2">
-              <div className="space-y-2 px-2">
-                <p className="text-sm text-gray-600 truncate py-1">
-                  {user?.email}
-                </p>
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Cerrar Sesión
-                </button>
-              </div>
-            </div>
-          )}
-        </nav>
-      </header>
-
-      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="mb-6 flex flex-col md:flex-row md:items-center gap-4 justify-between">
-          <div className="w-full md:w-1/2 lg:w-2/3">
-            <SearchBar 
-              products={products} 
-              onSearch={handleSearch} 
-              onSuggestionClick={handleSuggestionClick} 
-            />
-          </div>
-          <div className="flex justify-end">
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Nuevo Producto
-            </button>
-          </div>
+    <>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+        <div className="w-full sm:w-2/3">
+          <SearchBar 
+            products={products} 
+            onSearch={handleSearch} 
+            onSuggestionClick={handleSuggestionClick} 
+          />
         </div>
+        <div className="flex justify-end">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Nuevo Producto
+          </button>
+        </div>
+      </div>
 
-        <ProductSearchResults
-          products={filteredProducts}
-          isFiltered={isFiltered}
-          searchTerm={searchTerm}
-          onEdit={openEditModal}
-          onDelete={openDeleteConfirmation}
-          onDJCUpload={openDJCModal}
-          onQRView={openQRModal}
-        />
-      </main>
+      <ProductSearchResults
+        products={filteredProducts}
+        isFiltered={isFiltered}
+        searchTerm={searchTerm}
+        onEdit={openEditModal}
+        onDelete={openDeleteConfirmation}
+        onDJCUpload={openDJCModal}
+        onQRView={openQRModal}
+      />
 
       <ProductModal
         isOpen={isModalOpen}
@@ -315,7 +262,7 @@ function ProductsAdmin() {
           productName={productToDelete.nombre_producto}
         />
       )}
-    </div>
+    </>
   );
 }
 

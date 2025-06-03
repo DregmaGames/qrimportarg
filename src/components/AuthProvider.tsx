@@ -52,7 +52,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error('Session initialization error:', error);
-        toast.error('Error al inicializar la sesión');
+        
+        // Check if the error is related to an invalid refresh token
+        const errorMessage = String(error);
+        if (errorMessage.includes('Invalid Refresh Token') || 
+            errorMessage.includes('refresh_token_not_found')) {
+          // Clear the stale session data
+          await supabase.auth.signOut();
+          // Redirect to login page
+          navigate('/login', { replace: true });
+          toast.error('Su sesión ha expirado. Por favor, inicie sesión nuevamente.');
+        } else {
+          toast.error('Error al inicializar la sesión');
+        }
       } finally {
         setIsLoading(false);
       }

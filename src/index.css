@@ -74,6 +74,71 @@
   .touch-target {
     @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
   }
+  
+  /* Responsive table styles */
+  .product-table-container {
+    @apply w-full overflow-x-auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+  }
+  
+  .product-table {
+    @apply min-w-full divide-y divide-gray-200 table-fixed;
+  }
+  
+  .product-table th {
+    @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+    white-space: nowrap;
+  }
+  
+  .product-table td {
+    @apply px-6 py-4 whitespace-nowrap;
+  }
+  
+  .product-table-container::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  .product-table-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+  }
+  
+  .product-table-container::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 3px;
+  }
+  
+  /* Column widths for product table */
+  .col-name {
+    width: 25%;
+    min-width: 240px;
+  }
+  
+  .col-marca-modelo {
+    width: 20%;
+    min-width: 180px;
+  }
+  
+  .col-fabricante {
+    width: 20%;
+    min-width: 180px;
+  }
+  
+  .col-estado {
+    width: 15%;
+    min-width: 120px;
+  }
+  
+  .col-documentos {
+    width: 10%;
+    min-width: 100px;
+  }
+  
+  .col-acciones {
+    width: 10%;
+    min-width: 100px;
+  }
 }
 
 /* Utility styles */
@@ -106,6 +171,28 @@
   input, select, textarea {
     font-size: 16px !important; /* Prevent iOS zoom */
   }
+  
+  /* Mejorar legibilidad en móviles */
+  .text-xs {
+    font-size: 0.75rem !important;
+    line-height: 1.1rem !important;
+  }
+  
+  .text-sm {
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+  }
+  
+  /* Mejoras para el diseño de tarjetas móviles */
+  .font-mono {
+    letter-spacing: -0.025em;
+  }
+  
+  /* Optimizar visualización de etiquetas de estado */
+  .rounded-full {
+    padding-top: 0.15rem !important;
+    padding-bottom: 0.15rem !important;
+  }
 }
 
 /* High contrast mode support */
@@ -126,5 +213,55 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Desktop table optimizations */
+@media (min-width: 1024px) {
+  .product-table-container {
+    overflow-x: visible;
+  }
+  
+  .product-table {
+    width: 100%;
+    table-layout: fixed;
+  }
+  
+  .product-table th, 
+  .product-table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* Large screen optimizations */
+@media (min-width: 1280px) {
+  .product-table {
+    max-width: none;
+    width: 100%;
+  }
+  
+  .col-name {
+    width: 30%;
+  }
+  
+  .col-marca-modelo {
+    width: 20%;
+  }
+  
+  .col-fabricante {
+    width: 20%;
+  }
+  
+  .col-estado {
+    width: 10%;
+  }
+  
+  .col-documentos {
+    width: 10%;
+  }
+  
+  .col-acciones {
+    width: 10%;
   }
 }

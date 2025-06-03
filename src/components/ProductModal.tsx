@@ -27,6 +27,7 @@ export function ProductModal({ isOpen, onClose, onSubmit, editProduct }: Product
   
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (editProduct) {
@@ -57,6 +58,7 @@ export function ProductModal({ isOpen, onClose, onSubmit, editProduct }: Product
       });
     }
     setCertificateFile(null);
+    setUploadError(null);
   }, [editProduct]);
 
   useEffect(() => {
@@ -86,36 +88,97 @@ export function ProductModal({ isOpen, onClose, onSubmit, editProduct }: Product
     }
 
     setCertificateFile(file);
+    setUploadError(null);
+  };
+
+  // Helper function to sanitize filename for storage
+  const sanitizeFilename = (name: string): string => {
+    // Convert to lowercase and trim
+    let sanitized = name.toLowerCase().trim();
+    
+    // Replace spaces and special characters with hyphens
+    sanitized = sanitized.replace(/[^a-z0-9]/g, '-');
+    
+    // Replace multiple consecutive hyphens with a single one
+    sanitized = sanitized.replace(/-+/g, '-');
+    
+    // Remove leading and trailing hyphens
+    sanitized = sanitized.replace(/^-+|-+$/g, '');
+    
+    // If sanitized string is empty, use a default name
+    return sanitized || 'untitled';
   };
 
   const uploadCertificate = async (modelo: string): Promise<string | null> => {
     if (!certificateFile) return null;
+    setUploadError(null);
 
-    const fileName = `${modelo}_${Date.now()}.pdf`;
-    const { data, error } = await supabase.storage
-      .from('certificates')
-      .upload(fileName, certificateFile);
+    try {
+      // Use the predefined bucket name - this bucket should be created in the Supabase dashboard
+      const bucketName = 'certificates';
+      
+      // Sanitize the model name to ensure it's a valid storage key
+      const safeModelo = sanitizeFilename(modelo);
+      
+      // Create a unique, safe filename with timestamp
+      const fileName = `${safeModelo}_${Date.now()}.pdf`;
+      
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .upload(fileName, certificateFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-    if (error) {
+      if (error) {
+        console.error('Upload error details:', error);
+        throw new Error(`Error al subir archivo: ${error.message}`);
+      }
+
+      if (!data?.path) {
+        throw new Error('No se recibió la ruta del archivo después de la carga');
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(fileName);
+
+      if (!publicUrl) {
+        throw new Error('No se pudo obtener la URL pública del archivo');
+      }
+
+      return publicUrl;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido al cargar el archivo';
+      setUploadError(errorMessage);
+      console.error('Certificate upload error:', error);
       throw error;
     }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('certificates')
-      .getPublicUrl(fileName);
-
-    return publicUrl;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUploading(true);
+    setUploadError(null);
 
     try {
       let certificateUrl = formData.certificado_url;
 
       if (certificateFile) {
-        certificateUrl = await uploadCertificate(formData.modelo) || '';
+        try {
+          certificateUrl = await uploadCertificate(formData.modelo) || '';
+        } catch (uploadError) {
+          // Handle upload error but continue with form submission if user wants
+          toast.error(`Error al subir el certificado: ${uploadError instanceof Error ? uploadError.message : 'Error desconocido'}`);
+          
+          // Give user option to continue without the certificate
+          if (!window.confirm('¿Desea continuar sin adjuntar el certificado?')) {
+            setIsUploading(false);
+            return;
+          }
+          // Continue without certificate if user confirms
+          certificateUrl = '';
+        }
       }
 
       await onSubmit({
@@ -125,8 +188,8 @@ export function ProductModal({ isOpen, onClose, onSubmit, editProduct }: Product
 
       onClose();
     } catch (error) {
-      console.error('Error:', error);
-      toast.error('Error al procesar el formulario');
+      console.error('Form submission error:', error);
+      toast.error('Error al procesar el formulario. Por favor intente nuevamente.');
     } finally {
       setIsUploading(false);
     }
@@ -322,6 +385,11 @@ export function ProductModal({ isOpen, onClose, onSubmit, editProduct }: Product
                       </span>
                     )}
                   </div>
+                  {uploadError && (
+                    <p className="mt-2 text-sm text-red-600">
+                      Error: {uploadError}
+                    </p>
+                  )}
                 </div>
               </div>
             </form>

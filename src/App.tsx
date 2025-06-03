@@ -7,6 +7,9 @@ import ProductsAdmin from './pages/ProductsAdmin';
 import ProductPassport from './pages/ProductPassport';
 import QRLanding from './pages/QRLanding';
 import LoginPage from './pages/LoginPage';
+import DJCForm from './pages/DJCForm';
+import DJCList from './pages/DJCList';
+import AdminLayout from './components/AdminLayout';
 
 function App() {
   return (
@@ -20,19 +23,54 @@ function App() {
         <Route path="/products/:uuid" element={<ProductPassport />} />
         <Route path="/qr/:uuid" element={<QRLanding />} />
         
-        {/* Admin section - protected route */}
+        {/* Admin section - protected routes */}
         <Route
           path="/admin"
           element={
             <ProtectedRoute>
-              <ProductsAdmin />
+              <AdminLayout>
+                <ProductsAdmin />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/djc"
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <DJCList />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/djc/create"
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <DJCForm />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/djc/edit/:id"
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <DJCForm />
+              </AdminLayout>
             </ProtectedRoute>
           }
         />
         
         {/* Default redirects */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Navigate to="/login\" replace />} />
+        <Route path="*" element={<Navigate to="/login\" replace />} />
       </Routes>
     </AuthProvider>
   );

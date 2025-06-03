@@ -80,7 +80,7 @@ export function SearchBar({ products, onSearch, onSuggestionClick }: SearchBarPr
         </div>
         <input
           type="text"
-          className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm text-sm"
+          className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm text-base md:text-sm"
           placeholder="Buscar productos..."
           value={searchTerm}
           onChange={handleSearchChange}
