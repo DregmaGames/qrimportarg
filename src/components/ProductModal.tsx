@@ -267,12 +267,12 @@ export function ProductModal({ isOpen, onClose, onSubmit, editProduct }: Product
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Identificación
+                      Numero de Certificado
                     </label>
                     <input
                       type="text"
                       required
-                      placeholder="Número de serie o identificador único"
+                      placeholder="Identificacion de la Certificadora"
                       className="block w-full rounded-lg border-gray-300 bg-gray-50 px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500 focus:ring-2 shadow-sm transition duration-200"
                       value={formData.identificacion}
                       onChange={(e) => setFormData({ ...formData, identificacion: e.target.value })}
@@ -290,6 +290,7 @@ export function ProductModal({ isOpen, onClose, onSubmit, editProduct }: Product
                       onChange={(e) => setFormData({ ...formData, resolution: e.target.value })}
                     >
                       <option value="Res. SIYC N° 16/2025">Res. SIYC N° 16/2025</option>
+                      <option value="Res. SIYC N° 222/2025">Res. SIYC N° 222/2025</option>
                       <option value="Res. SIYC N° 236/2024">Res. SIYC N° 236/2024</option>
                     </select>
                   </div>

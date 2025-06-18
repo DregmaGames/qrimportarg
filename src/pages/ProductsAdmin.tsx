@@ -1,18 +1,21 @@
 import { useEffect, useState, useRef } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, LayoutGrid, List } from 'lucide-react';
 import { ProductModal } from '../components/ProductModal';
 import { DJCUploadModal } from '../components/DJCUploadModal';
 import { QRCodeModal } from '../components/QRCodeModal';
 import { DeleteConfirmationDialog } from '../components/DeleteConfirmationDialog';
 import { SearchBar } from '../components/SearchBar';
 import { ProductSearchResults } from '../components/ProductSearchResults';
+import { ProductCardGrid } from '../components/ProductCardGrid';
 import { supabase } from '../lib/supabase';
 import { Producto } from '../types/productos';
 import { useAuth } from '../lib/auth';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 function ProductsAdmin() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Producto[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Producto[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,6 +27,7 @@ function ProductsAdmin() {
   const [productToDelete, setProductToDelete] = useState<Producto | undefined>();
   const [searchTerm, setSearchTerm] = useState('');
   const [isFiltered, setIsFiltered] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const fetchProducts = async () => {
     try {
@@ -78,6 +82,7 @@ function ProductsAdmin() {
 
   const handleCreateProduct = async (productData: Omit<Producto, 'codigo_unico' | 'created_at' | 'qr_code_url' | 'qr_version' | 'qr_generated_at' | 'djc_estado' | 'qr_generado'>) => {
     try {
+      // First, create the product
       const { data, error } = await supabase
         .from('productos')
         .insert([{
@@ -91,7 +96,45 @@ function ProductsAdmin() {
 
       if (error) throw error;
       
-      toast.success('Producto creado exitosamente');
+      // Now, create an initial DJC record associated with the product
+      if (data) {
+        // Prepare DJC data from product information
+        const initialDJCData = {
+          resolucion: data.resolution || 'Res. SIYC N° 16/2025',
+          razon_social: '', // Will be completed by the user
+          cuit: '', // Will be completed by the user
+          marca: data.marca || '',
+          domicilio_legal: '', // Will be completed by the user
+          domicilio_planta: '', // Will be completed by the user
+          telefono: '', // Will be completed by the user
+          email: '', // Will be completed by the user
+          codigo_producto: data.codigo_unico || '',
+          fabricante: data.fabricante || '',
+          identificacion_producto: data.nombre_producto || '',
+          reglamentos: '', // Will be completed by the user
+          normas_tecnicas: '', // Will be completed by the user
+          documento_evaluacion: '', // Will be completed by the user
+          fecha_lugar: '', // Will be completed by the user
+          created_by: user?.id,
+          producto_id: data.codigo_unico
+        };
+        
+        const { error: djcError } = await supabase
+          .from('djc')
+          .insert([initialDJCData]);
+          
+        if (djcError) {
+          console.error('Error creating initial DJC:', djcError);
+          // We'll still consider the product creation successful even if DJC creation fails
+          toast.error('Producto creado, pero hubo un error al crear la Declaración Jurada asociada.');
+        } else {
+          toast.success('Producto creado exitosamente con Declaración Jurada asociada.');
+          toast.success('Complete la Declaración Jurada desde la sección "Declaraciones Juradas".');
+        }
+      } else {
+        toast.success('Producto creado exitosamente');
+      }
+      
       fetchProducts();
     } catch (error) {
       console.error('Error creating product:', error);
@@ -129,10 +172,9 @@ function ProductsAdmin() {
       });
       
       // Use the delete_product RPC function to move to recycle bin
-      // Fixed the parameter order to match the expected function signature
       const { data, error } = await supabase.rpc('delete_product', {
-        deleted_by_id: user?.id || null,
-        product_id: productToDelete.codigo_unico
+        product_id: productToDelete.codigo_unico,
+        deleted_by_id: user?.id || null
       });
   
       if (error) {
@@ -195,7 +237,25 @@ function ProductsAdmin() {
             onSuggestionClick={handleSuggestionClick} 
           />
         </div>
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-3">
+          {/* View toggle */}
+          <div className="hidden sm:flex items-center bg-white rounded-lg shadow-sm border border-gray-200">
+            <button
+              className={`p-2 ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              onClick={() => setViewMode('grid')}
+              aria-label="Grid view"
+            >
+              <LayoutGrid className="h-5 w-5" />
+            </button>
+            <button
+              className={`p-2 ${viewMode === 'list' ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              onClick={() => setViewMode('list')}
+              aria-label="List view"
+            >
+              <List className="h-5 w-5" />
+            </button>
+          </div>
+          
           <button
             onClick={() => setIsModalOpen(true)}
             className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -205,16 +265,28 @@ function ProductsAdmin() {
           </button>
         </div>
       </div>
-
-      <ProductSearchResults
-        products={filteredProducts}
-        isFiltered={isFiltered}
-        searchTerm={searchTerm}
-        onEdit={openEditModal}
-        onDelete={openDeleteConfirmation}
-        onDJCUpload={openDJCModal}
-        onQRView={openQRModal}
-      />
+      
+      {viewMode === 'grid' ? (
+        <ProductCardGrid
+          products={filteredProducts}
+          isFiltered={isFiltered}
+          searchTerm={searchTerm}
+          onEdit={openEditModal}
+          onDelete={openDeleteConfirmation}
+          onDJCUpload={openDJCModal}
+          onQRView={openQRModal}
+        />
+      ) : (
+        <ProductSearchResults
+          products={filteredProducts}
+          isFiltered={isFiltered}
+          searchTerm={searchTerm}
+          onEdit={openEditModal}
+          onDelete={openDeleteConfirmation}
+          onDJCUpload={openDJCModal}
+          onQRView={openQRModal}
+        />
+      )}
 
       <ProductModal
         isOpen={isModalOpen}

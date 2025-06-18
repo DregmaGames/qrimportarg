@@ -18,6 +18,7 @@ interface DJC {
   created_at: string;
   firma_url: string | null;
   pdf_url: string | null;
+  numero_djc: string | null;
 }
 
 interface DJCHistoryItem {
