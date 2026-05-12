@@ -1,11 +1,5 @@
-# Netlify configuration file
 
-  # Redirect QR legacy to Mckein passport
-  [[redirects]]
-    from = "/products/8107426a-a80b-4da1-98db-88a4784c4f53"
-    to = "https://mckein.vercel.app/passport/8107426a-a80b-4da1-98db-88a4784c4f53"
-    status = 301
-    force = true
+  # Netlify configuration file
 
   # Redirect all URLs to index.html for client-side routing
   [[redirects]]
