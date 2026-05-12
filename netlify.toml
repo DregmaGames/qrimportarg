@@ -1,17 +1,22 @@
-
   # Netlify configuration file
 
-  # Redirect all URLs to index.html for client-side routing
+  # Redirect QR to Mckein
+  [[redirects]]
+    from = "/products/8107426a-a80b-4da1-98db-88a4784c4f53"
+    to = "https://mckein.vercel.app/passport/8107426a-a80b-4da1-98db-88a4784c4f53"
+    status = 301
+    force = true
+
+  # SPA client-side routing
   [[redirects]]
     from = "/*"
     to = "/index.html"
     status = 200
 
-  # Set custom headers for security
+  # Security headers
   [[headers]]
     for = "/*"
     [headers.values]
       X-Frame-Options = "DENY"
       X-XSS-Protection = "1; mode=block"
       X-Content-Type-Options = "nosniff"
-      Referrer-Policy = "no-referrer-when-downgrade"
