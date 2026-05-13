@@ -3,7 +3,7 @@
   # Redirect QR to Mckein
   [[redirects]]
     from = "/products/8107426a-a80b-4da1-98db-88a4784c4f53"
-    to = "https://mckein.vercel.app/passport/8107426a-a80b-4da1-98db-88a4784c4f53"
+    to = "https://mckein.vercel.app/rt/apolos-srl"
     status = 301
     force = true
 
